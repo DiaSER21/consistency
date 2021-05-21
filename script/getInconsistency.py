@@ -2,7 +2,7 @@ from glob import glob
 import json
 import sys, time
 import Levenshtein
-
+TAB = "\t"
 
 # inf = open("../data/dialog-bAbI-tasks/artarin.txt")
 # out = open("artarin2.txt", 'w')
@@ -11,6 +11,34 @@ import Levenshtein
 #     i += 1
 #     line = str(i)+" "+" ".join(line.split(" ")[1:])
 #     out.write(line)
+
+def get_polarity(diaser,dscr):
+
+    diasersson = json.load(diaser)
+    dscrsson = json.load(dscr)
+    for i in range(len(dscrsson)):
+        #if "voip" in dscrsson[i]['dialogue_id']:
+        did = dscrsson[i]['dialogue_id']
+        for j in range(len(diasersson)):
+            if diasersson[j]["dialogue_id"]== did:
+                diasersson[j]['success'] = dscrsson[i]['finished']
+                babied = []
+                count = 0
+                for k in range(0,len(diasersson[j]["utterances"]),2):
+                    count = k/2
+                    babied.append(f"{count}\
+                     {diasersson[j]['utterances'][k]['utterance']}{TAB}{diasersson[j]['utterances'][k+1]['utterance']}")
+                babies = "\n".join(babied)
+                new,error = errors(babies,0)
+                count = 1
+                for trn in new :
+                    diasersson[j]["utterances"][count]['inconsistency'] = trn.split('(')[1].split(')')[0]
+                    count += 2
+
+
+
+
+
 
 
 def is_request(word, ontology):
@@ -326,46 +354,8 @@ def get_dials(file):
     return dialogues
 
 if __name__ == '__main__':
-    # i = 0
-    # err = 0
-    # succ = 0
-    # outnormal = open('../data/dialog-bAbI-tasks/task6trndevpol.txt', 'w')
-    # outerr = open("../data/dialog-bAbI-tasks/task6trndevunk.txt", 'w')
-    # flist = "../data/data/"
-    # # print(len(dials))
-    # rewrite(flist, dials, outnormal, outerr)
-    # dials = []
-    # dials2 = []
-    # outerr.close()
-    # dials2 = get_dials(open("../data/dialog-bAbI-tasks/task6trndevunk.txt"), dials2)
-    # dials2 = get_dials(open("../data/dialog-bAbI-tasks/task6tr"), dials2)
-    # outnormal = open('../data/dialog-bAbI-tasks/task6testpol.txt')
-    # outerr = open("../data/dialog-bAbI-tasks/task6testunk.txt")
-    # outinco = open("../data/dialog-bAbI-tasks/task6testink.txt", 'w')
-    fictr1 = '../data/dialog-bAbI-tasks/task6traindevinc_out.txt'
-    fictr2 = '../data/dialog-bAbI-tasks/task6trndevink_out.txt'
-    ficte1 = '../data/dialog-bAbI-tasks/task6testinc_out.txt'
-    ficte2 = '../data/dialog-bAbI-tasks/task6testink_out.txt'
-    l = [ficte1,ficte2,fictr1,fictr2]
-    ontology = json.load(open("../data/dialog-bAbI-tasks/ontology.json"))
-    for elem in l :
-        out = elem.replace('_out.txt','_2.txt')
-        elem = open(elem).readlines()
-        post_prod(elem, out, ontology)
+    dias = "/home/pap/Documents/leon/repos/diaser/processed_data/camrest_all_split/dev.json"
+    dsc = "/home/pap/Documents/leon/repos/diaser/expe2/data/dstccamrest.json"
 
-    # ontology = json.load(open("../data/dialog-bAbI-tasks/ontology.json"))
-    dials = get_dials(open("../data/dialog-bAbI-tasks/task6trndevpol.txt"), dials)
-    outinco = open("../data/dialog-bAbI-tasks/task6trndevinc2.txt", 'w')
-    l = []
-    errs = 0
-    perfect = 0
-    outinco.close()
-    all = 0
-    for elem in dials:
-        old = errs
-        all += 1
-        n, errs = errors(elem, ontology, errs)
-        outinco.write("\n" + ''.join(n))
-        if old == errs:
-            perfect += 1
+    get_polarity(open(dias),open(dsc))
 
